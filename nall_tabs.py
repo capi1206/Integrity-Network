@@ -27,7 +27,7 @@ styles = {
 #-------------------------------------------------------------------------------------------------------------------------
 #Seccion Transaccional
 #extraccion de datos de base smart y creacion del grafo
-transaccional = pd.read_excel("C:/Users/difes/BASE OPERACIONES 30-11-2022.xlsx",sheet_name=1)
+transaccional = pd.read_excel("assets/BASE OPERACIONES 30-11-2022.xlsx",sheet_name=1)
 df_rating=df=pd.read_csv('assets/modeloRat.csv')
 df_ci=pd.read_excel('EstructuraDetalladaCIIU_4AC.xls', skiprows=2)
 transaccional['producto'] = transaccional['MONTO_APLICACION']*transaccional['PORC_DESC_OP']
@@ -572,7 +572,6 @@ def zoomed_graph(node_clicked,degree_neighbors = 2):
 
     #need to fill these with all of the coordiates
     for edge in edge_list:
-        #format: [beginning,ending,None]
         x_coords = [spring_3D[edge[0]][0],spring_3D[edge[1]][0],None]
         x_edges += x_coords
 
@@ -840,7 +839,6 @@ def gen_n_relaciones(n_clicks):
         lee=len(ent_f)
         l2=len(ent_n)
         for _ in range(100000):
-    
             if random.random() >0.4999:
                 e1=ent_f[int(random.random()*lee)]
             else:
@@ -853,16 +851,17 @@ def gen_n_relaciones(n_clicks):
             if e1!=e2 and (e1, e2) not in enlaces_f:
                 sc=enlace(e1,e2)
                 if sc >0:
-                    act1=dic_act[e1] if e1 in ent_act_dic else dic2[e1]
-                    act2=dic_act[e2] if e2 in ent_act_dic else dic2[e2]
-                    l_nodo.append(e1)
-                    l_nodo2.append(e2)
-                    l_actividad.append(n_dic[act1])
-                    l_actividad2.append(n_dic[act2])
+                    if not (e1 in l_nodo and e2 in l_nodo2 and l_nodo.index(e1)==l_nodo2.index(e2)):
+                        act1=dic_act[e1] if e1 in ent_act_dic else dic2[e1]
+                        act2=dic_act[e2] if e2 in ent_act_dic else dic2[e2]
+                        l_nodo.append(e1)
+                        l_nodo2.append(e2)
+                        l_actividad.append(n_dic[act1])
+                        l_actividad2.append(n_dic[act2])
         print('finalizó')
         d_aux=pd.DataFrame(  {'nodo1':l_nodo,
+                              'nodo2':l_nodo2,
                    'actividad1':l_actividad,
-                   'nodo2':l_nodo2,
                    'actividad2':l_actividad2,})
         #d_aux.to_excel('nuevas relaciones.xlsx', index=False)
         table_style={  "overflow": "auto", "max-width": "100%"}
@@ -910,8 +909,7 @@ def api_balance_test(clicks,search):
     )]
 
 card_1 = dbc.Card(
-    [
-        dbc.CardImg(src="/assets/financials-1.jpg", top=True),
+    [    dbc.CardImg(src="/assets/financials-1.jpg", top=True),
         dbc.CardBody([
             html.P("Potential suppliers:", className="card-text"),
             html.P("Potential 2:",id='potential_suppliers', className="card-text"),
@@ -1092,13 +1090,8 @@ row16_resultados = html.Tr([html.Td("Utilidad neta"), html.Td("Na")])
 
 table_body_resultados = [html.Tbody([row1_resultados, row2_resultados, row3_resultados, row4_resultados,
                                 row5_resultados,row6_resultados,row7_resultados,row8_resultados,row9_resultados,
-                                row10_resultados,
-                                row11_resultados,
-                                row12_resultados,
-                                row13_resultados,
-                                row14_resultados,
-                                row15_resultados,
-                                row16_resultados])]
+                                row10_resultados,row11_resultados,row12_resultados,row13_resultados,
+                                row14_resultados,row15_resultados,row16_resultados])]
 
 table_modal_resultados = dbc.Table(table_header_resultados + table_body_resultados, bordered=True)
 
@@ -1170,10 +1163,7 @@ row_smart =dbc.Row(
         dbc.Col(                    dcc.Graph(id= 'valor_cartera_pie_chart',
                         figure=fig1),width="auto"),
         dbc.Col(fig2,width="auto"),
-        # card_1,
-        # card_2,
-        # card_3,
-        # card_4
+
     ],
     justify="center"
 )
@@ -1196,6 +1186,7 @@ accordion_smart = html.Div(
         start_collapsed=True
     )
 )
+
 butt_style={"background-color": "#007BFF",  # Background color
         "color": "white",  # Text color
         "border": "none",  # Remove button border
@@ -1204,13 +1195,15 @@ butt_style={"background-color": "#007BFF",  # Background color
         "font-size": "16px",  # Adjust font size
         "cursor": "pointer",  
 }
+
 app_style={
-        "background-color": "rgb(14,19,31)",  # Set the background color to black
-        "height": "100vh",  # Set the height to cover the entire viewport
+        "background-color": "rgb(14,19,31)",  
+        "height": "100vh",  
     }
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #app layout
+
 app.layout = html.Div(style=app_style,
     children=[
     html.Img(src=app.get_asset_url('integrity.png'),style={'height':'10%', 'width':'25%'}),
@@ -1235,15 +1228,15 @@ app.layout = html.Div(style=app_style,
                             fullscreen=False)]),
             accordion
              ]),
-             html.Div(
-    id="n-rel-table",  # This is the ID to reference in the callback
-    children=[
-        dash_table.DataTable(
-            id="n-rel-data-table",
+            html.Div(
+                id="n-rel-table",  # This is the ID to reference in the callback
+                children=[
+                    dash_table.DataTable(
+                id="n-rel-data-table",
             columns=[
-                {"name": "Nodo 1", "id": "nodo1"},
-                {"name": "Actividad 1", "id": "actividad1"},
+                {"name": "Nodo 1", "id": "nodo1"},                
                 {"name": "Nodo 2", "id": "nodo2"},
+                {"name": "Actividad 1", "id": "actividad1"},
                 {"name": "Actividad 2", "id": "actividad2"},
             ],
             style_table={'overflowY': 'scroll', 'maxHeight': '80vh'}, 
