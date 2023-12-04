@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>  
+    <title>Display 3D NetworkX Graph</title>
+    <style>
+        body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color:  rgba(35, 42, 43, 1); 
+}
+
+#integrity-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end; /* Aligns items to the right */
+    height: calc(100vh / 6); /* Adjust the height as needed */
+}
+.integrity-logo{
+    width: 330px; /* Set your desired width */
+    height: 70px; /* Let the height adjust proportionally */
+    margin-top: 20px; /* Add space to the top */
+    margin-right: 20px; 
+}
+
+
+.tab-content {
+    display: flex;
+    flex: 1;
+}
+
+#side-bar {
+    flex: 1;
+    width: calc(100% / 7);
+}
+
+#content {
+    flex: 6;
+}
+
+#graph-frame {
+    width: 100%;
+    height: 100%;
+    border: none; /* Remove default iframe border */
+}
+        .button-table {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 999;
+            /* Ensure it's above other elements */
+        }
+
+        .hidden {
+            display: none;
+            /* Initially hide the table */
+        }
+        
+        
+        .data-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            color: white;
+            /* Adjust the margin as needed */
+        }
+
+        th,
+        td {
+            border: 0.2px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #444;
+            color: white;
+        }
+        .legend-tab {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(50, 50, 50, 0.7); /* Adjust opacity and color as needed */
+            color: white;
+            padding: 10px;
+            z-index: 998; /* Ensure it's between the graph and the button */
+        }
+        .clickable {
+            cursor: pointer;
+            color: rgb(174, 174, 235);
+            text-decoration: underline;
+        }
+    </style>
+    
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+        }
+
+        function toggleTable() {
+            var table = document.getElementById("data-table");
+            var graph = document.getElementById("graph-frame");
+            table.classList.toggle("hidden");
+            if (!graph.classList.contains("hidden")) {
+                    graph.classList.add("hidden");
+                } else {
+                    graph.classList.remove("hidden");
+            }
+        }
+
+        function displayNodeInfo(node) {
+            // Replace this with your logic to display node info
+            alert("You clicked node: " + node);
+        }
+        function loadCSVData() {
+            fetch('data/n_relaciones.csv')
+                .then(response => response.text())
+                .then(data => {
+                    const rows = data.split('\n');
+                    const table = document.getElementById('data-table');
+                    table.innerHTML = ''; // Clear existing table content
+
+                    // Process only the first 20 rows
+                    for (let rowIndex = 0; rowIndex < Math.min(20, rows.length); rowIndex++) {
+                        const row = rows[rowIndex];
+                        const columns = row.split(',');
+                        const newRow = document.createElement('tr');
+
+                        for (let columnIndex = 1; columnIndex< columns.length; columnIndex++) {
+                            
+                            const newCell = document.createElement('td');
+                            newCell.textContent = columns[columnIndex].trim().replace(/}/g, ','); // Trim whitespace
+                            console.log(columns[columnIndex]);
+                            if (columnIndex === 1 || columnIndex === 2 &&(rowIndex != 0)) {
+                                // Make items in the first column clickable
+                                newCell.classList.add('clickable');
+                                newCell.addEventListener('click', () => {
+                                    displayNodeInfo(columns[columnIndex].trim());
+                                });
+                            }
+                            newRow.appendChild(newCell);
+                        }
+
+                        table.appendChild(newRow);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching CSV data:', error);
+                });
+        }
+
+        window.onload = loadCSVData;
+
+        function prettText(texto){
+            return texto.toLowerCase().replace(/(^|\s)\S/g, function (char) {
+                return char.toUpperCase();
+            });
+
+        }
+        
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            content.classList.toggle('show');
+        }
+        
+        function loadGraphMetrics(selected) {
+            fetch('data/dic_graphs.json')
+                .then(response => response.json())
+                .then(data => {
+                    const graphMetricsLegend = document.getElementById('graph-metrics-legend');
+                    graphMetricsLegend.innerHTML = '';
+                    
+                    const metrics = data[selected];
+                    createAccordion('Eigen-centralidad', metrics["Eigenvect_ctr"], 'eigenMetrics');
+                    createAccordion('In-centralidad', metrics["in_ctr"], 'inMetrics');
+                    createAccordion('Out-centralidad', metrics["out_ctr"], 'outMetrics');
+                    createAccordion('Entre-centralidad', metrics["between_ctr"], 'betMetrics');
+                })
+                .catch(error => {
+                    console.error('Error fetching graph metrics:', error);
+                });
+        }
+        function createAccordion(title, data, id) {
+            const graphMetricsLegend = document.getElementById('graph-metrics-legend');
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'accordion-item';
+
+            const titleHeader = document.createElement('h4');
+            titleHeader.textContent = title;
+            accordionItem.appendChild(titleHeader);
+
+            const accordionContent = document.createElement('div');
+            accordionContent.id = id;
+            accordionContent.className = 'accordion-content';
+
+            for (const key in data) {
+                // Create elements for each metric
+                const paragraphElement = document.createElement('p');
+                paragraphElement.textContent = "\u00A0\u00A0\u00A0" + prettText(key) + ': ' + parseFloat(data[key]).toExponential(2);
+                accordionContent.appendChild(paragraphElement);
+            }
+            accordionItem.appendChild(accordionContent);
+            graphMetricsLegend.appendChild(accordionItem);
+            }
+
+
+
+
+
+        function changeSubgraph() {
+            var dropdown = document.getElementById("sub-graph-dropdown");
+            var selected = dropdown.value;
+            if (selected) {
+                var graphFrame = document.getElementById('graph-frame');
+                graphFrame.src = `assets/${selected}.html`; //graphFrame.src
+                
+                try {
+            // Try to execute the loadGraphMetrics function
+                loadGraphMetrics(selected);
+                } catch (error) {
+                    console.error(`Error loading graph metrics for '${selected}':`, error);
+                }
+                } else {
+                    console.error("No subgraph selected");
+                } 
+        }
+    </script>
+</head>
+
+<body>
+    <div class="integrity-container" id="integrity-container"><img src="assets/integrity.png" class="integrity-logo">
+    </div>
+    <div id="graph-tab" class="tab-content">
+        <div id="side-bar">
+            <button class="button-table" onclick="toggleTable()">Nuevas relaciones</button>
+           
+
+            <select id="sub-graph-dropdown" onchange="changeSubgraph()" class="changeable">
+                <option value="subgraph1">Subgrafo 1</option>
+                <option value="subgraph2">Subgrafo 2</option>
+                <option value="subgraph3">Subgrafo 3</option>
+                <option value="subgraph4">Subgrafo 4</option>
+                <option value="subgraph5">Subgrafo 5</option>
+                <option value="subgraph6">Subgrafo 6</option>
+            </select>
+
+                
+            <div id="graph-metrics-legend" class="accordion changeable">
+                    <!-- This is where the created elements will be inserted -->
+            </div>
+        </div>
+        <div id="content">
+            <table id="data-table" class="hidden">
+                <!-- tabla va acá-->
+            </table>
+            <iframe id="graph-frame" src="assets/3d_networkx_graph.html"></iframe>
+        </div>
+        
+        
+    </div>    
+</body>
+</html>
