@@ -35,8 +35,12 @@
 #side-bar {
     flex: 1;
     width: calc(100% / 7);
+    margin-left: 9px;
+    margin-top:5px;
 }
-
+#graph-tab {
+    padding-top: 20px; /* Add space at the top of graph-tab */
+}
 #content {
     flex: 6;
 }
@@ -46,13 +50,7 @@
     height: 100%;
     border: none; /* Remove default iframe border */
 }
-        .button-table {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 999;
-            /* Ensure it's above other elements */
-        }
+
 
         .hidden {
             display: none;
@@ -240,9 +238,9 @@
     </div>
     <div id="graph-tab" class="tab-content">
         <div id="side-bar">
-            <button class="button-table" onclick="toggleTable()">Nuevas relaciones</button>
+            
            
-
+            <button class="button-table" onclick="toggleTable()">Nuevas relaciones</button>
             <select id="sub-graph-dropdown" onchange="changeSubgraph()" class="changeable">
                 <option value="subgraph1">Subgrafo 1</option>
                 <option value="subgraph2">Subgrafo 2</option>
@@ -251,7 +249,7 @@
                 <option value="subgraph5">Subgrafo 5</option>
                 <option value="subgraph6">Subgrafo 6</option>
             </select>
-
+            
                 
             <div id="graph-metrics-legend" class="accordion changeable">
                     <!-- This is where the created elements will be inserted -->
@@ -263,8 +261,6 @@
             </table>
             <iframe id="graph-frame" src="assets/3d_networkx_graph.html"></iframe>
         </div>
-        
-        
     </div>    
 </body>
 </html>
